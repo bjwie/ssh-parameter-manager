@@ -36,7 +36,7 @@ Dieses Tool ermöglicht es Ihnen, Symfony Parameter-Dateien von mehreren Kunden 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/ssh-parameter-manager.git
+   git clone https://github.com/bjwie/ssh-parameter-manager.git
    cd ssh-parameter-manager
    ```
 
@@ -224,7 +224,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you encounter any issues or have questions:
 
 1. Check the [troubleshooting section](#-troubleshooting)
-2. Search existing [GitHub issues](https://github.com/yourusername/ssh-parameter-manager/issues)
+2. Search existing [GitHub issues](https://github.com/bjwie/ssh-parameter-manager/issues)
 3. Create a new issue with detailed information
 
 ---

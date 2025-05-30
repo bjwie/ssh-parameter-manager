@@ -7,9 +7,11 @@
 
 A professional web-based tool for managing Symfony `parameters.yml` files across multiple servers via SSH connections. Perfect for DevOps teams managing multiple customer environments.
 
-## 🎯 Überblick
+## 📸 Screenshot
 
-Dieses Tool ermöglicht es Ihnen, Symfony Parameter-Dateien von mehreren Kunden auf verschiedenen Servern zentral über eine benutzerfreundliche Web-Oberfläche zu verwalten. Alle Änderungen erfolgen direkt über SSH-Verbindungen zu Ihren Servern.
+![SSH Parameter Manager Interface](screenshot.png)
+
+*Modern web interface for managing Symfony parameters across multiple servers with real-time status monitoring and bulk operations.*
 
 ## ✨ Features
 

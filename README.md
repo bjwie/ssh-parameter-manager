@@ -4,6 +4,8 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![CI/CD](https://github.com/bjwie/ssh-parameter-manager/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/bjwie/ssh-parameter-manager/actions)
+[![Auto-Init Tests](https://github.com/bjwie/ssh-parameter-manager/workflows/Auto-Initialization%20Tests/badge.svg)](https://github.com/bjwie/ssh-parameter-manager/actions)
 
 A professional web-based tool for managing Symfony `parameters.yml` files across multiple servers via SSH connections. Perfect for DevOps teams managing multiple customer environments.
 

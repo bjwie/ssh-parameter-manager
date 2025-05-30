@@ -1,0 +1,124 @@
+# SSH Parameter Manager Configuration
+# Copy this file to ssh_config.yml and adjust the settings for your environment
+
+# SSH Connection Settings
+ssh:
+  # Default SSH port
+  port: 22
+  # Connection timeout in seconds
+  timeout: 30
+  # SSH key file path (optional, uses default SSH agent if not specified)
+  key_file: ~/.ssh/id_rsa
+  # Whether to use SSH agent
+  use_agent: true
+
+# Server Definitions
+servers:
+  production:
+    host: prod-server.example.com
+    port: 22
+    username: deploy
+    # Optional: specific key file for this server
+    # key_file: ~/.ssh/prod_key
+    description: "Production Server"
+    
+  staging:
+    host: staging-server.example.com
+    port: 2222
+    username: deploy
+    description: "Staging Server"
+    
+  development:
+    host: dev-server.example.com
+    port: 22
+    username: developer
+    description: "Development Server"
+
+# Customer Configurations
+customers:
+  # Format: customer_name:
+  #   server: server_name (from servers section)
+  #   path: absolute path to parameters.yml file
+  #   description: human readable description
+  
+  customer1:
+    server: production
+    path: /var/www/customer1/app/config/parameters.yml
+    description: "Customer 1 - E-commerce Platform"
+    
+  customer2:
+    server: production
+    path: /var/www/customer2/app/config/parameters.yml
+    description: "Customer 2 - CRM System"
+    
+  customer3:
+    server: staging
+    path: /var/www/customer3/app/config/parameters.yml
+    description: "Customer 3 - Blog Platform"
+    
+  customer4:
+    server: development
+    path: /var/www/customer4/app/config/parameters.yml
+    description: "Customer 4 - Portfolio Website"
+    
+  customer5:
+    server: production
+    path: /var/www/customer5/app/config/parameters.yml
+    description: "Customer 5 - Online Shop"
+
+# Backup Settings
+backup:
+  # Directory to store backups (relative to customer's directory)
+  directory: backups
+  # Backup filename format (uses strftime)
+  filename_format: "parameters_%Y%m%d_%H%M%S.yml.bak"
+  # Keep backups for X days (0 = keep forever)
+  retention_days: 30
+
+# Default Parameters for new configurations
+defaults:
+  database_host: localhost
+  database_port: 3306
+  database_name: symfony
+  database_user: symfony_user
+  database_password: ""
+  mailer_transport: smtp
+  mailer_host: localhost
+  mailer_user: ""
+  mailer_password: ""
+  secret: ""
+
+# Bulk Operation Templates
+templates:
+  database_migration:
+    description: "Migrate to new database server"
+    parameters:
+      database_host: new-db-server.example.com
+      database_port: 3306
+      
+  mailer_update:
+    description: "Update mail server configuration"
+    parameters:
+      mailer_transport: smtp
+      mailer_host: mail.example.com
+      mailer_port: 587
+      
+  security_update:
+    description: "Update security settings"
+    parameters:
+      secret: "generate_new"  # Special value to generate new secret
+
+# Logging Configuration
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  file: parameter_updater.log
+  max_size_mb: 10
+  backup_count: 5
+
+# Web Interface Settings
+web:
+  host: 127.0.0.1
+  port: 5000
+  debug: false
+  # Secret key for Flask sessions (generate with: python -c "import secrets; print(secrets.token_hex(32))")
+  secret_key: "your-secret-key-here" 

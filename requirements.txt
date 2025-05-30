@@ -1,0 +1,6 @@
+PyYAML>=6.0
+argparse>=1.4.0
+paramiko>=3.0.0
+scp>=0.14.0
+flask>=2.0.0
+flask-cors>=4.0.0 

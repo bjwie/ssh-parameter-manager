@@ -1,4 +1,4 @@
-.PHONY: help install install-dev clean test lint format run setup check-deps
+.PHONY: help install install-dev clean test lint format run setup check-deps security
 
 # Default target
 help:
@@ -81,4 +81,9 @@ dev-setup: install-dev setup
 	@echo "✅ Development environment ready!"
 	@echo "   1. Edit ssh_config.yml with your server details"
 	@echo "   2. Run 'make run' to start the web server"
-	@echo "   3. Open http://localhost:5000 in your browser" 
+	@echo "   3. Open http://localhost:5000 in your browser"
+
+security:
+	@echo "Running security scan..."
+	safety scan
+	@echo "Security scan completed!" 

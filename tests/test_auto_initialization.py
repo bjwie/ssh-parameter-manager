@@ -22,13 +22,21 @@ try:
     from selenium.webdriver.chrome.options import Options
     from selenium.webdriver.common.action_chains import ActionChains
     from selenium.common.exceptions import TimeoutException, WebDriverException
+
     SELENIUM_AVAILABLE = True
 except ImportError:
     SELENIUM_AVAILABLE = False
+
     # Create dummy classes to avoid import errors
-    class Options: pass
-    class WebDriverException(Exception): pass
-    class TimeoutException(Exception): pass
+    class Options:
+        pass
+
+    class WebDriverException(Exception):
+        pass
+
+    class TimeoutException(Exception):
+        pass
+
 
 from web_server import app
 
@@ -42,7 +50,7 @@ class TestAutoInitialization(unittest.TestCase):
         """Set up test environment once for all tests."""
         if not SELENIUM_AVAILABLE:
             raise unittest.SkipTest("Selenium not available")
-            
+
         cls.server_thread = None
         cls.driver = None
         cls.base_url = "http://localhost:5000"
@@ -56,6 +64,7 @@ class TestAutoInitialization(unittest.TestCase):
     @classmethod
     def start_test_server(cls):
         """Start Flask server in a separate thread."""
+
         def run_server():
             app.run(host="localhost", port=5000, debug=False, use_reloader=False)
 
@@ -405,7 +414,7 @@ class TestAutoInitialization(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Clean up after all tests."""
-        if hasattr(cls, 'driver') and cls.driver:
+        if hasattr(cls, "driver") and cls.driver:
             cls.driver.quit()
 
 
@@ -424,8 +433,11 @@ class TestAutoInitializationAPI(unittest.TestCase):
         response_time = time.time() - start_time
 
         # Accept both success and SSH failure status codes like other tests
-        self.assertIn(response.status_code, [200, 500], 
-                     f"Status endpoint should respond (got {response.status_code})")
+        self.assertIn(
+            response.status_code,
+            [200, 500],
+            f"Status endpoint should respond (got {response.status_code})",
+        )
         self.assertLess(
             response_time,
             2.0,
@@ -444,8 +456,11 @@ class TestAutoInitializationAPI(unittest.TestCase):
         response_time = time.time() - start_time
 
         # Accept both success and SSH failure status codes like other tests
-        self.assertIn(response.status_code, [200, 500], 
-                     f"Customers endpoint should respond (got {response.status_code})")
+        self.assertIn(
+            response.status_code,
+            [200, 500],
+            f"Customers endpoint should respond (got {response.status_code})",
+        )
         self.assertLess(
             response_time,
             3.0,
@@ -473,8 +488,11 @@ class TestAutoInitializationAPI(unittest.TestCase):
             # All requests should respond (200 or 500 for SSH failures)
             for future in concurrent.futures.as_completed(futures):
                 response = future.result()
-                self.assertIn(response.status_code, [200, 500], 
-                             f"Concurrent requests should respond (got {response.status_code})")
+                self.assertIn(
+                    response.status_code,
+                    [200, 500],
+                    f"Concurrent requests should respond (got {response.status_code})",
+                )
 
 
 if __name__ == "__main__":

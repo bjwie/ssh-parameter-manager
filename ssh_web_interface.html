@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSH Parameter Manager - Symfony Parameters.yml</title>
+    <title>SSH Parameter Manager - VSCode Edition</title>
+    
+    <!-- Monaco Editor Loader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <!-- YAML Parser for validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -15,55 +21,54 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            color: #2c3e50;
         }
 
         .container {
             max-width: 1600px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+            padding: 20px;
         }
 
         .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px;
             text-align: center;
+            color: white;
+            margin-bottom: 30px;
         }
 
         .header h1 {
-            font-size: 2.5em;
+            font-size: 2.8em;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
+            font-size: 1.3em;
             opacity: 0.9;
-            font-size: 1.1em;
         }
 
         .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
             padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
         .status-bar {
-            background: #f8f9fa;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            border: 2px solid #dee2e6;
         }
 
         .status-info {
             display: flex;
             gap: 30px;
-            flex-wrap: wrap;
         }
 
         .status-item {
@@ -71,141 +76,274 @@
         }
 
         .status-value {
-            font-size: 1.5em;
-            font-weight: bold;
+            font-size: 24px;
+            font-weight: 700;
             color: #2c3e50;
         }
 
         .status-label {
-            font-size: 0.9em;
+            font-size: 12px;
             color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
         }
 
         .refresh-btn {
-            background: #17a2b8;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-        .customers-grid {
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Monaco Editor Section */
+        .editor-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e9ecef;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .editor-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .editor-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .editor-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .editor-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .editor-tab:hover {
+            color: #2c3e50;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .editor-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 500px;
+            position: relative;
+            background: #1e1e1e;
+        }
+
+        .editor-toolbar {
+            background: #2d2d30;
+            color: #cccccc;
+            padding: 8px 15px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .editor-toolbar-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .editor-toolbar-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            background: #3c3c3c;
+            color: #cccccc;
+            border: 1px solid #464647;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #094771;
+            border-color: #007acc;
+        }
+
+        .toolbar-btn.active {
+            background: #007acc;
+            color: white;
+            border-color: #007acc;
+        }
+
+        .editor-status {
+            color: #cccccc;
+            font-size: 11px;
+        }
+
+        #monaco-editor {
+            height: 450px;
+        }
+
+        .preview-container {
+            height: 450px;
+            background: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            display: none;
+        }
+
+        .diff-container {
+            height: 450px;
+            display: none;
+        }
+
+        /* Customer Management */
+        .customers-section {
             display: grid;
             grid-template-columns: 1fr 2fr;
             gap: 30px;
             margin-bottom: 30px;
         }
 
-        .customers-panel {
-            background: #f8f9fa;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .customers-panel h3 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
         .customer-list {
-            max-height: 400px;
-            overflow-y: auto;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e9ecef;
         }
 
         .customer-item {
-            background: white;
-            border: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e9ecef;
             border-radius: 8px;
-            padding: 15px;
             margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
         }
 
         .customer-item:hover {
+            background: #f8f9fa;
             border-color: #3498db;
-            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.2);
         }
 
-        .customer-item.selected {
-            border-color: #27ae60;
-            background: #f0f8f0;
+        .customer-item.active {
+            background: #e3f2fd;
+            border-color: #2196f3;
         }
 
-        .customer-item.loading {
-            opacity: 0.6;
-            pointer-events: none;
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .customer-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
         .customer-name {
             font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 5px;
         }
 
-        .customer-details {
+        .customer-server {
             font-size: 12px;
-            color: #7f8c8d;
+            color: #6c757d;
         }
 
-        .customer-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #95a5a6;
+        .customer-actions {
+            display: flex;
+            gap: 5px;
         }
 
-        .customer-status.connected {
-            background: #27ae60;
-        }
-
-        .customer-status.error {
-            background: #e74c3c;
-        }
-
-        .parameter-editor {
-            background: white;
-            border: 2px solid #dee2e6;
+        /* Bulk Actions */
+        .bulk-actions {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
             border-radius: 10px;
             padding: 20px;
+            margin-bottom: 30px;
         }
 
-        .parameter-form {
+        .bulk-form {
             display: grid;
+            grid-template-columns: 1fr 1fr 2fr auto;
             gap: 15px;
+            align-items: end;
         }
 
-        .form-group {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 10px;
-            align-items: center;
+        .bulk-form > div {
+            display: flex;
+            flex-direction: column;
         }
 
-        .form-group label {
+        .bulk-form label {
             font-weight: 600;
+            margin-bottom: 5px;
             color: #2c3e50;
         }
 
-        .form-group input, .form-group select {
+        .bulk-form input, .bulk-form select {
             padding: 10px;
             border: 2px solid #ddd;
             border-radius: 5px;
-            font-size: 14px;
         }
 
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
+        /* Buttons */
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -213,7 +351,7 @@
             padding: 12px 25px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             transition: all 0.3s ease;
             margin-right: 10px;
@@ -258,41 +396,10 @@
 
         .btn-small {
             padding: 8px 15px;
-            font-size: 14px;
+            font-size: 12px;
         }
 
-        .bulk-actions {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-
-        .bulk-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr 2fr auto;
-            gap: 15px;
-            align-items: end;
-        }
-
-        .bulk-form > div {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .bulk-form label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #2c3e50;
-        }
-
-        .bulk-form input, .bulk-form select {
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-        }
-
+        /* Status Messages */
         .status-message {
             padding: 15px;
             border-radius: 8px;
@@ -343,8 +450,9 @@
             font-weight: 600;
         }
 
+        /* Responsive Design */
         @media (max-width: 1200px) {
-            .customers-grid {
+            .customers-section {
                 grid-template-columns: 1fr;
             }
             
@@ -356,6 +464,7 @@
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
+                padding: 10px;
             }
             
             .main-content {
@@ -366,8 +475,16 @@
                 gap: 15px;
             }
 
-            .form-group {
-                grid-template-columns: 1fr;
+            .editor-container {
+                height: 350px;
+            }
+
+            #monaco-editor {
+                height: 300px;
+            }
+
+            .preview-container, .diff-container {
+                height: 300px;
             }
         }
     </style>
@@ -376,7 +493,7 @@
     <div class="container">
         <div class="header">
             <h1>🔧 SSH Parameter Manager</h1>
-            <p>Verwalten Sie Symfony Parameters.yml Dateien über SSH-Verbindungen</p>
+            <p>VSCode-Edition mit professionellem YAML-Editor</p>
         </div>
 
         <div class="main-content">
@@ -399,537 +516,690 @@
                 <button class="refresh-btn" onclick="loadSystemStatus()">🔄 Status aktualisieren</button>
             </div>
 
-            <div id="status" class="status-message"></div>
+            <!-- Status Messages -->
+            <div id="status-message" class="status-message"></div>
 
-            <!-- Bulk Actions -->
-            <div class="bulk-actions">
-                <h3>⚡ Bulk-Aktionen für ausgewählte Kunden</h3>
-                <div class="bulk-form">
-                    <div>
-                        <label for="bulk-parameter">Parameter:</label>
-                        <select id="bulk-parameter">
-                            <option value="database_host">Database Host</option>
-                            <option value="database_port">Database Port</option>
-                            <option value="database_name">Database Name</option>
-                            <option value="database_user">Database User</option>
-                            <option value="database_password">Database Password</option>
-                            <option value="mailer_transport">Mailer Transport</option>
-                            <option value="mailer_host">Mailer Host</option>
-                            <option value="mailer_user">Mailer User</option>
-                            <option value="mailer_password">Mailer Password</option>
-                            <option value="secret">Secret Key</option>
-                            <option value="custom">Benutzerdefiniert...</option>
+            <!-- Monaco Editor Section -->
+            <div class="editor-section">
+                <div class="editor-header">
+                    <div class="editor-title">
+                        💻 VSCode YAML Editor
+                        <span class="editor-status" id="editor-status">Bereit</span>
+                    </div>
+                    <div class="editor-controls">
+                        <select id="customer-selector" onchange="loadCustomerConfig()">
+                            <option value="">Kunde für Bearbeitung auswählen...</option>
                         </select>
-                    </div>
-                    <div id="custom-parameter-div" style="display: none;">
-                        <label for="custom-parameter">Parameter Name:</label>
-                        <input type="text" id="custom-parameter" placeholder="parameter_name">
-                    </div>
-                    <div>
-                        <label for="bulk-value">Neuer Wert:</label>
-                        <input type="text" id="bulk-value" placeholder="Neuer Wert für alle ausgewählten Kunden">
-                    </div>
-                    <div>
-                        <button class="btn btn-warning" onclick="executeBulkUpdate()" id="bulk-update-btn">
-                            🔄 Bulk Update
-                        </button>
-                        <button class="btn btn-small" onclick="generateSecret()">🎲 Secret generieren</button>
+                        <button class="btn btn-small" onclick="formatYAML()">🎨 Format</button>
+                        <button class="btn btn-small" onclick="validateYAML()">✅ Validate</button>
+                        <button class="btn btn-small btn-success" onclick="saveFromEditor()">💾 Speichern</button>
+                        <button class="btn btn-small btn-warning" onclick="createBackup()">📦 Backup</button>
                     </div>
                 </div>
-                <div style="margin-top: 15px;">
-                    <button class="btn btn-small" onclick="selectAllCustomers()">✅ Alle auswählen</button>
-                    <button class="btn btn-small" onclick="deselectAllCustomers()">❌ Alle abwählen</button>
-                    <span id="selected-info" style="margin-left: 15px; font-weight: 600;"></span>
+
+                <div class="editor-tabs">
+                    <button class="editor-tab active" onclick="switchEditorTab('yaml')">📄 YAML Editor</button>
+                    <button class="editor-tab" onclick="switchEditorTab('preview')">👁️ Preview</button>
+                    <button class="editor-tab" onclick="switchEditorTab('diff')">🔄 Diff</button>
+                </div>
+
+                <div class="editor-container">
+                    <div class="editor-toolbar">
+                        <div class="editor-toolbar-left">
+                            <span class="editor-status" id="current-file">parameters.yml</span>
+                            <button class="toolbar-btn" id="word-wrap-btn" onclick="toggleWordWrap()">📏 Wrap</button>
+                            <button class="toolbar-btn" id="minimap-btn" onclick="toggleMinimap()">🗺️ Minimap</button>
+                            <button class="toolbar-btn" id="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+                        </div>
+                        <div class="editor-toolbar-right">
+                            <span class="editor-status" id="cursor-position">Zeile 1, Spalte 1</span>
+                            <span class="editor-status" id="file-size">0 Zeichen</span>
+                            <span class="editor-status" id="yaml-status">✅ Valid</span>
+                        </div>
+                    </div>
+                    
+                    <div id="monaco-editor"></div>
+                    <div id="preview-container" class="preview-container"></div>
+                    <div id="diff-container" class="diff-container"></div>
                 </div>
             </div>
 
-            <!-- Main Grid -->
-            <div class="customers-grid">
-                <!-- Customer List -->
-                <div class="customers-panel">
-                    <h3>👥 Kunden (<span id="customer-count">0</span>)</h3>
-                    <div id="customer-list" class="customer-list">
-                        <!-- Kunden werden hier geladen -->
+            <!-- Customer Management & Bulk Actions -->
+            <div class="customers-section">
+                <div class="customer-list">
+                    <h3 style="margin-bottom: 20px; color: #2c3e50;">👥 Kunden-Verwaltung</h3>
+                    <div id="customers-container">
+                        <!-- Customers will be loaded here -->
                     </div>
                 </div>
 
-                <!-- Parameter Editor -->
-                <div class="parameter-editor">
-                    <h3 id="editor-title">📝 Parameter Editor</h3>
-                    <p id="editor-subtitle">Wählen Sie einen Kunden aus, um Parameter zu bearbeiten</p>
-                    
-                    <div id="parameter-form" class="parameter-form" style="display: none;">
-                        <!-- Parameter-Formular wird hier geladen -->
-                    </div>
-                    
-                    <div id="editor-actions" style="margin-top: 20px; display: none;">
-                        <button class="btn btn-success" onclick="saveParameters()" id="save-btn">
-                            💾 Parameter speichern
-                        </button>
-                        <button class="btn btn-warning" onclick="createBackup()" id="backup-btn">
-                            📦 Backup erstellen
-                        </button>
-                        <button class="btn" onclick="reloadParameters()" id="reload-btn">
-                            🔄 Neu laden
-                        </button>
+                <div class="bulk-actions">
+                    <h3 style="margin-bottom: 15px; color: #856404;">🔄 Bulk-Aktionen</h3>
+                    <div class="bulk-form">
+                        <div>
+                            <label for="custom-parameter">Parameter Name</label>
+                            <input type="text" id="custom-parameter" placeholder="database_host">
+                        </div>
+                        <div>
+                            <label for="bulk-value">Neuer Wert</label>
+                            <input type="text" id="bulk-value" placeholder="localhost">
+                        </div>
+                        <div>
+                            <span class="selected-count" id="selected-count">0 Kunden ausgewählt</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-warning" onclick="applyBulkUpdate()">
+                                📝 Bulk Update
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Actions -->
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #ecf0f1;">
-                <button class="btn btn-warning" onclick="downloadAllConfigs()">💾 Alle Konfigurationen herunterladen</button>
-                <button class="btn btn-danger" onclick="refreshAllConnections()">🔄 Alle Verbindungen erneuern</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Globale Variablen
-        let customers = {};
-        let selectedCustomers = new Set();
+        // Global variables
+        let editor = null;
+        let diffEditor = null;
         let currentCustomer = null;
+        let originalContent = '';
+        let isDarkTheme = true;
+        let customers = [];
 
-        // API Base URL
-        const API_BASE = '';
-
-        // Initialisierung
-        document.addEventListener('DOMContentLoaded', function() {
-            setupEventListeners();
-            loadSystemStatus();
-            loadCustomers();
+        // Initialize Monaco Editor
+        require.config({ 
+            paths: { 
+                vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' 
+            }
         });
 
-        function setupEventListeners() {
-            // Bulk Parameter Change
-            document.getElementById('bulk-parameter').addEventListener('change', function() {
-                const customDiv = document.getElementById('custom-parameter-div');
-                customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+        require(['vs/editor/editor.main'], function () {
+            initializeEditor();
+            setupYAMLLanguage();
+            loadSystemStatus();
+        });
+
+        function initializeEditor() {
+            // Main YAML Editor
+            editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                value: `# Symfony Parameters Configuration
+# Bearbeiten Sie hier Ihre parameters.yml Datei
+parameters:
+    # Database Configuration
+    database_host: localhost
+    database_port: 3306
+    database_name: symfony_app
+    database_user: root
+    database_password: ~
+
+    # Mailer Configuration  
+    mailer_transport: smtp
+    mailer_host: localhost
+    mailer_user: ~
+    mailer_password: ~
+
+    # Application Settings
+    locale: de
+    secret: ThisTokenIsNotSoSecretChangeIt
+    
+    # Custom Parameters
+    app_name: "My Symfony App"
+    app_version: "1.0.0"`,
+                language: 'yaml',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: true },
+                wordWrap: 'on',
+                fontSize: 14,
+                lineNumbers: 'on',
+                renderWhitespace: 'selection',
+                scrollBeyondLastLine: false,
+                folding: true,
+                bracketMatching: 'always',
+                autoIndent: 'full'
+            });
+
+            // Setup editor event listeners
+            editor.onDidChangeCursorPosition((e) => {
+                updateCursorPosition(e.position);
+            });
+
+            editor.onDidChangeModelContent(() => {
+                updateFileSize();
+                validateYAMLContent();
+            });
+
+            // Diff Editor for comparisons
+            diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-container'), {
+                theme: 'vs-dark',
+                automaticLayout: true,
+                readOnly: true
+            });
+
+            updateEditorStatus('Editor bereit');
+        }
+
+        function setupYAMLLanguage() {
+            // Enhanced YAML syntax highlighting
+            monaco.languages.setMonarchTokensProvider('yaml', {
+                tokenizer: {
+                    root: [
+                        [/^(\s*)([\w\-_]+)(\s*)(:)/, ['', 'key.yaml', '', 'delimiter.yaml']],
+                        [/^\s*-/, 'list.yaml'],
+                        [/"([^"\\]|\\.)*"/, 'string.yaml'],
+                        [/'([^'\\]|\\.)*'/, 'string.yaml'],
+                        [/\b\d+\b/, 'number.yaml'],
+                        [/\b(true|false|null|~)\b/, 'keyword.yaml'],
+                        [/#.*$/, 'comment.yaml']
+                    ]
+                }
+            });
+
+            // Autocomplete for Symfony parameters
+            monaco.languages.registerCompletionItemProvider('yaml', {
+                provideCompletionItems: (model, position) => {
+                    const suggestions = [
+                        {
+                            label: 'database_host',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'database_host: localhost',
+                            documentation: 'Database server hostname'
+                        },
+                        {
+                            label: 'database_port',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'database_port: 3306',
+                            documentation: 'Database server port'
+                        },
+                        {
+                            label: 'database_name',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'database_name: symfony_app',
+                            documentation: 'Database name'
+                        },
+                        {
+                            label: 'database_user',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'database_user: root',
+                            documentation: 'Database username'
+                        },
+                        {
+                            label: 'database_password',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'database_password: ~',
+                            documentation: 'Database password'
+                        },
+                        {
+                            label: 'mailer_transport',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'mailer_transport: smtp',
+                            documentation: 'Mailer transport method'
+                        },
+                        {
+                            label: 'mailer_host',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'mailer_host: localhost',
+                            documentation: 'SMTP server hostname'
+                        },
+                        {
+                            label: 'secret',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'secret: ThisTokenIsNotSoSecretChangeIt',
+                            documentation: 'Application secret key'
+                        },
+                        {
+                            label: 'locale',
+                            kind: monaco.languages.CompletionItemKind.Property,
+                            insertText: 'locale: de',
+                            documentation: 'Default application locale'
+                        }
+                    ];
+
+                    return { suggestions };
+                }
             });
         }
 
-        // API Funktionen
-        async function apiCall(endpoint, options = {}) {
-            try {
-                const response = await fetch(API_BASE + endpoint, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    },
-                    ...options
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || `HTTP ${response.status}`);
-                }
-                
-                return data;
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
+        // Editor Functions
+        function switchEditorTab(tab) {
+            // Update tab appearance
+            document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Show/hide containers
+            document.getElementById('monaco-editor').style.display = tab === 'yaml' ? 'block' : 'none';
+            document.getElementById('preview-container').style.display = tab === 'preview' ? 'block' : 'none';
+            document.getElementById('diff-container').style.display = tab === 'diff' ? 'block' : 'none';
+
+            if (tab === 'preview') {
+                updatePreview();
+            } else if (tab === 'diff') {
+                showDiff();
             }
         }
 
+        function formatYAML() {
+            try {
+                const content = editor.getValue();
+                const parsed = jsyaml.load(content);
+                const formatted = jsyaml.dump(parsed, {
+                    indent: 4,
+                    lineWidth: 120,
+                    noRefs: true
+                });
+                editor.setValue(formatted);
+                showStatus('success', '✅ YAML erfolgreich formatiert!');
+            } catch (error) {
+                showStatus('error', `❌ Formatierung fehlgeschlagen: ${error.message}`);
+            }
+        }
+
+        function validateYAML() {
+            validateYAMLContent();
+        }
+
+        function validateYAMLContent() {
+            try {
+                const content = editor.getValue();
+                jsyaml.load(content);
+                document.getElementById('yaml-status').innerHTML = '✅ Valid';
+                document.getElementById('yaml-status').style.color = '#28a745';
+                return true;
+            } catch (error) {
+                document.getElementById('yaml-status').innerHTML = '❌ Invalid';
+                document.getElementById('yaml-status').style.color = '#dc3545';
+                
+                // Show error markers in editor
+                const model = editor.getModel();
+                const markers = [{
+                    severity: monaco.MarkerSeverity.Error,
+                    startLineNumber: error.mark ? error.mark.line + 1 : 1,
+                    startColumn: error.mark ? error.mark.column + 1 : 1,
+                    endLineNumber: error.mark ? error.mark.line + 1 : 1,
+                    endColumn: error.mark ? error.mark.column + 10 : 10,
+                    message: error.message
+                }];
+                monaco.editor.setModelMarkers(model, 'yaml', markers);
+                return false;
+            }
+        }
+
+        function toggleWordWrap() {
+            const currentWrap = editor.getOption(monaco.editor.EditorOption.wordWrap);
+            const newWrap = currentWrap === 'on' ? 'off' : 'on';
+            editor.updateOptions({ wordWrap: newWrap });
+            
+            const btn = document.getElementById('word-wrap-btn');
+            btn.classList.toggle('active');
+            btn.textContent = newWrap === 'on' ? '📏 Wrap On' : '📏 Wrap Off';
+        }
+
+        function toggleMinimap() {
+            const currentMinimap = editor.getOption(monaco.editor.EditorOption.minimap);
+            const newEnabled = !currentMinimap.enabled;
+            editor.updateOptions({ minimap: { enabled: newEnabled } });
+            
+            const btn = document.getElementById('minimap-btn');
+            btn.classList.toggle('active');
+            btn.textContent = newEnabled ? '🗺️ Minimap On' : '🗺️ Minimap Off';
+        }
+
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            const theme = isDarkTheme ? 'vs-dark' : 'vs';
+            monaco.editor.setTheme(theme);
+            
+            if (diffEditor) {
+                diffEditor.updateOptions({ theme: theme });
+            }
+            
+            const btn = document.getElementById('theme-btn');
+            btn.textContent = isDarkTheme ? '☀️ Light' : '🌙 Dark';
+            
+            // Update editor container background
+            const container = document.querySelector('.editor-container');
+            container.style.background = isDarkTheme ? '#1e1e1e' : '#ffffff';
+        }
+
+        function updatePreview() {
+            try {
+                const content = editor.getValue();
+                const parsed = jsyaml.load(content);
+                const previewHtml = generatePreviewHTML(parsed);
+                document.getElementById('preview-container').innerHTML = previewHtml;
+            } catch (error) {
+                document.getElementById('preview-container').innerHTML = 
+                    `<div style="color: red; padding: 20px;">
+                        <h3>❌ YAML Parse Error</h3>
+                        <p>${error.message}</p>
+                    </div>`;
+            }
+        }
+
+        function generatePreviewHTML(data, level = 0) {
+            let html = '';
+            const indent = '  '.repeat(level);
+            
+            if (typeof data === 'object' && data !== null) {
+                for (const [key, value] of Object.entries(data)) {
+                    if (typeof value === 'object' && value !== null) {
+                        html += `${indent}<strong style="color: #2196F3;">${key}:</strong><br>`;
+                        html += generatePreviewHTML(value, level + 1);
+                    } else {
+                        html += `${indent}<strong style="color: #4CAF50;">${key}:</strong> `;
+                        html += `<span style="color: #FF9800;">${value}</span><br>`;
+                    }
+                }
+            }
+            
+            return html;
+        }
+
+        function showDiff() {
+            if (!originalContent) {
+                document.getElementById('diff-container').innerHTML = 
+                    '<div style="padding: 20px; text-align: center; color: #666;">Keine Vergleichsdaten verfügbar</div>';
+                return;
+            }
+
+            const originalModel = monaco.editor.createModel(originalContent, 'yaml');
+            const modifiedModel = monaco.editor.createModel(editor.getValue(), 'yaml');
+            
+            diffEditor.setModel({
+                original: originalModel,
+                modified: modifiedModel
+            });
+        }
+
+        function updateCursorPosition(position) {
+            document.getElementById('cursor-position').textContent = 
+                `Zeile ${position.lineNumber}, Spalte ${position.column}`;
+        }
+
+        function updateFileSize() {
+            const content = editor.getValue();
+            const size = content.length;
+            const lines = content.split('\n').length;
+            document.getElementById('file-size').textContent = 
+                `${size} Zeichen, ${lines} Zeilen`;
+        }
+
+        function updateEditorStatus(message) {
+            document.getElementById('editor-status').textContent = message;
+        }
+
+        // API Functions
         async function loadSystemStatus() {
             try {
-                const status = await apiCall('/api/status');
+                updateEditorStatus('Lade System-Status...');
+                const response = await fetch('/api/status');
+                const data = await response.json();
                 
-                document.getElementById('total-customers').textContent = status.total_customers;
+                document.getElementById('total-customers').textContent = data.total_customers || 0;
+                document.getElementById('connected-servers').textContent = data.connected_servers || 0;
                 
-                const connectedCount = Object.values(status.servers).filter(s => s.connected).length;
-                document.getElementById('connected-servers').textContent = `${connectedCount}/${Object.keys(status.servers).length}`;
-                
-                // Server-Status in Kunden-Liste aktualisieren
-                updateCustomerConnectionStatus(status.servers);
-                
+                await loadCustomers();
+                updateEditorStatus('System-Status geladen');
             } catch (error) {
-                showStatus(`Fehler beim Laden des Status: ${error.message}`, 'error');
+                console.error('Error loading system status:', error);
+                updateEditorStatus('Fehler beim Laden des Status');
+                showStatus('error', 'Fehler beim Laden des System-Status');
             }
         }
 
         async function loadCustomers() {
             try {
-                showStatus('Lade Kunden...', 'info');
+                const response = await fetch('/api/customers');
+                customers = await response.json();
                 
-                const response = await apiCall('/api/customers');
-                customers = response.customers;
-                
-                displayCustomers();
-                document.getElementById('customer-count').textContent = Object.keys(customers).length;
-                
-                showStatus(`${Object.keys(customers).length} Kunden geladen`, 'success');
-                
+                updateCustomerList();
+                updateCustomerSelector();
             } catch (error) {
-                showStatus(`Fehler beim Laden der Kunden: ${error.message}`, 'error');
+                console.error('Error loading customers:', error);
+                showStatus('error', 'Fehler beim Laden der Kunden');
             }
         }
 
-        function displayCustomers() {
-            const customerList = document.getElementById('customer-list');
-            customerList.innerHTML = '';
+        function updateCustomerList() {
+            const container = document.getElementById('customers-container');
+            container.innerHTML = '';
             
-            for (const [customerId, customerInfo] of Object.entries(customers)) {
-                const customerItem = document.createElement('div');
-                customerItem.className = 'customer-item';
-                customerItem.setAttribute('data-customer-id', customerId);
-                customerItem.onclick = () => toggleCustomerSelection(customerId);
-                
-                customerItem.innerHTML = `
-                    <div class="customer-status" id="status-${customerId}"></div>
-                    <div class="customer-name">👤 ${customerId}</div>
-                    <div class="customer-details">
-                        <div>🖥️ ${customerInfo.host}</div>
-                        <div>📁 ${customerInfo.path}</div>
-                        <div>📝 ${customerInfo.description}</div>
+            customers.forEach(customer => {
+                const customerDiv = document.createElement('div');
+                customerDiv.className = 'customer-item';
+                customerDiv.innerHTML = `
+                    <div class="customer-info">
+                        <input type="checkbox" class="customer-checkbox" 
+                               data-customer-id="${customer.server}:${customer.name}"
+                               onchange="updateSelectedCount()">
+                        <div>
+                            <div class="customer-name">${customer.name}</div>
+                            <div class="customer-server">${customer.server}</div>
+                        </div>
+                    </div>
+                    <div class="customer-actions">
+                        <button class="btn btn-small" onclick="loadCustomerInEditor('${customer.server}:${customer.name}')">
+                            📝 Bearbeiten
+                        </button>
                     </div>
                 `;
-                
-                customerList.appendChild(customerItem);
-            }
-        }
-
-        function updateCustomerConnectionStatus(serverStatus) {
-            for (const [customerId, customerInfo] of Object.entries(customers)) {
-                const statusElement = document.getElementById(`status-${customerId}`);
-                if (statusElement) {
-                    const serverName = customerInfo.server;
-                    const serverInfo = serverStatus[serverName];
-                    
-                    if (serverInfo && serverInfo.connected) {
-                        statusElement.className = 'customer-status connected';
-                        statusElement.title = 'Verbunden';
-                    } else {
-                        statusElement.className = 'customer-status error';
-                        statusElement.title = serverInfo ? serverInfo.error : 'Nicht verbunden';
-                    }
-                }
-            }
-        }
-
-        function toggleCustomerSelection(customerId) {
-            const customerItem = document.querySelector(`[data-customer-id="${customerId}"]`);
-            
-            if (!customerItem) {
-                console.error(`Customer item not found for ID: ${customerId}`);
-                return;
-            }
-            
-            if (selectedCustomers.has(customerId)) {
-                selectedCustomers.delete(customerId);
-                customerItem.classList.remove('selected');
-            } else {
-                selectedCustomers.add(customerId);
-                customerItem.classList.add('selected');
-            }
-            
-            updateSelectedCustomersDisplay();
-            
-            // Wenn nur ein Kunde ausgewählt ist, lade seine Parameter
-            if (selectedCustomers.size === 1) {
-                loadCustomerParameters(customerId);
-            } else {
-                clearParameterEditor();
-            }
-        }
-
-        function selectAllCustomers() {
-            selectedCustomers.clear();
-            for (const customerId of Object.keys(customers)) {
-                selectedCustomers.add(customerId);
-            }
-            
-            document.querySelectorAll('.customer-item').forEach(item => {
-                item.classList.add('selected');
+                container.appendChild(customerDiv);
             });
-            
-            updateSelectedCustomersDisplay();
-            clearParameterEditor();
         }
 
-        function deselectAllCustomers() {
-            selectedCustomers.clear();
-            document.querySelectorAll('.customer-item').forEach(item => {
-                item.classList.remove('selected');
+        function updateCustomerSelector() {
+            const selector = document.getElementById('customer-selector');
+            selector.innerHTML = '<option value="">Kunde für Bearbeitung auswählen...</option>';
+            
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = `${customer.server}:${customer.name}`;
+                option.textContent = `${customer.name} (${customer.server})`;
+                selector.appendChild(option);
             });
-            updateSelectedCustomersDisplay();
-            clearParameterEditor();
         }
 
-        function updateSelectedCustomersDisplay() {
-            document.getElementById('selected-customers').textContent = selectedCustomers.size;
+        async function loadCustomerConfig() {
+            const selector = document.getElementById('customer-selector');
+            const customerId = selector.value;
             
-            const selectedInfo = document.getElementById('selected-info');
-            if (selectedCustomers.size > 0) {
-                selectedInfo.innerHTML = `<span class="selected-count">${selectedCustomers.size} ausgewählt</span>`;
-            } else {
-                selectedInfo.textContent = 'Keine Kunden ausgewählt';
-            }
+            if (!customerId) return;
+            
+            await loadCustomerInEditor(customerId);
         }
 
-        async function loadCustomerParameters(customerId) {
+        async function loadCustomerInEditor(customerId) {
             try {
+                updateEditorStatus(`Lade Konfiguration für ${customerId}...`);
+                
+                const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/parameters`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const content = await response.text();
+                originalContent = content;
+                editor.setValue(content);
                 currentCustomer = customerId;
                 
-                // UI aktualisieren
-                document.getElementById('editor-title').textContent = `📝 Parameter Editor - ${customerId}`;
-                document.getElementById('editor-subtitle').textContent = 'Lade Parameter...';
+                document.getElementById('current-file').textContent = `${customerId}/parameters.yml`;
+                document.getElementById('customer-selector').value = customerId;
                 
-                // Parameter laden
-                const response = await apiCall(`/api/customer/${encodeURIComponent(customerId)}/parameters`);
+                // Highlight customer in list
+                document.querySelectorAll('.customer-item').forEach(item => {
+                    item.classList.remove('active');
+                });
                 
-                displayParameterForm(response.parameters, response.file_path);
+                const customerItem = document.querySelector(`[data-customer-id="${customerId}"]`)?.closest('.customer-item');
+                if (customerItem) {
+                    customerItem.classList.add('active');
+                }
                 
+                updateEditorStatus(`Konfiguration geladen: ${customerId}`);
+                showStatus('success', `✅ Konfiguration für ${customerId} geladen`);
             } catch (error) {
-                showStatus(`Fehler beim Laden der Parameter: ${error.message}`, 'error');
-                clearParameterEditor();
+                console.error('Error loading customer config:', error);
+                updateEditorStatus('Fehler beim Laden');
+                showStatus('error', `❌ Fehler beim Laden der Konfiguration: ${error.message}`);
             }
         }
 
-        function displayParameterForm(parameters, filePath) {
-            const form = document.getElementById('parameter-form');
-            const actions = document.getElementById('editor-actions');
-            
-            document.getElementById('editor-subtitle').textContent = `Datei: ${filePath}`;
-            
-            // Standard-Parameter
-            const standardParams = [
-                { key: 'database_host', label: 'Database Host', type: 'text' },
-                { key: 'database_port', label: 'Database Port', type: 'number' },
-                { key: 'database_name', label: 'Database Name', type: 'text' },
-                { key: 'database_user', label: 'Database User', type: 'text' },
-                { key: 'database_password', label: 'Database Password', type: 'password' },
-                { key: 'mailer_transport', label: 'Mailer Transport', type: 'select', options: ['smtp', 'sendmail', 'mail', 'gmail'] },
-                { key: 'mailer_host', label: 'Mailer Host', type: 'text' },
-                { key: 'mailer_user', label: 'Mailer User', type: 'text' },
-                { key: 'mailer_password', label: 'Mailer Password', type: 'password' },
-                { key: 'secret', label: 'Secret Key', type: 'text' }
-            ];
-            
-            let formHTML = '';
-            
-            // Standard-Parameter hinzufügen
-            for (const param of standardParams) {
-                const value = parameters[param.key] || '';
-                
-                if (param.type === 'select') {
-                    const options = param.options.map(opt => 
-                        `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`
-                    ).join('');
-                    
-                    formHTML += `
-                        <div class="form-group">
-                            <label>${param.label}:</label>
-                            <select name="${param.key}">${options}</select>
-                        </div>
-                    `;
-                } else {
-                    formHTML += `
-                        <div class="form-group">
-                            <label>${param.label}:</label>
-                            <input type="${param.type}" name="${param.key}" value="${value}" placeholder="${param.label}">
-                        </div>
-                    `;
-                }
+        async function saveFromEditor() {
+            if (!currentCustomer) {
+                showStatus('error', '❌ Kein Kunde ausgewählt');
+                return;
             }
-            
-            // Zusätzliche Parameter
-            const additionalParams = Object.entries(parameters).filter(([key]) => 
-                !standardParams.some(p => p.key === key)
-            );
-            
-            if (additionalParams.length > 0) {
-                formHTML += '<h4 style="grid-column: 1 / -1; margin: 20px 0 10px 0; color: #2c3e50;">➕ Zusätzliche Parameter</h4>';
-                
-                for (const [key, value] of additionalParams) {
-                    formHTML += `
-                        <div class="form-group">
-                            <label>${key}:</label>
-                            <input type="text" name="${key}" value="${value}" placeholder="${key}">
-                        </div>
-                    `;
-                }
+
+            if (!validateYAMLContent()) {
+                showStatus('error', '❌ YAML-Syntax ist ungültig. Bitte korrigieren Sie die Fehler.');
+                return;
             }
-            
-            form.innerHTML = formHTML;
-            form.style.display = 'grid';
-            actions.style.display = 'block';
-        }
 
-        function clearParameterEditor() {
-            currentCustomer = null;
-            document.getElementById('editor-title').textContent = '📝 Parameter Editor';
-            document.getElementById('editor-subtitle').textContent = 'Wählen Sie einen Kunden aus, um Parameter zu bearbeiten';
-            document.getElementById('parameter-form').style.display = 'none';
-            document.getElementById('editor-actions').style.display = 'none';
-        }
-
-        async function saveParameters() {
-            if (!currentCustomer) return;
-            
             try {
-                const saveBtn = document.getElementById('save-btn');
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<span class="loading"></span> Speichere...';
+                updateEditorStatus('Speichere Änderungen...');
                 
-                // Parameter aus Formular sammeln
-                const form = document.getElementById('parameter-form');
-                const inputs = form.querySelectorAll('input, select');
-                const parameters = {};
-                
-                inputs.forEach(input => {
-                    if (input.value.trim()) {
-                        parameters[input.name] = input.value.trim();
-                    }
+                const content = editor.getValue();
+                const response = await fetch(`/api/customers/${encodeURIComponent(currentCustomer)}/parameters`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: content
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                originalContent = content;
                 
-                // API-Aufruf
-                await apiCall(`/api/customer/${encodeURIComponent(currentCustomer)}/parameters`, {
-                    method: 'POST',
-                    body: JSON.stringify({ parameters })
-                });
-                
-                showStatus(`Parameter für ${currentCustomer} erfolgreich gespeichert!`, 'success');
-                
+                updateEditorStatus('Änderungen gespeichert');
+                showStatus('success', `✅ Parameter für ${currentCustomer} erfolgreich gespeichert!`);
             } catch (error) {
-                showStatus(`Fehler beim Speichern: ${error.message}`, 'error');
-            } finally {
-                const saveBtn = document.getElementById('save-btn');
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '💾 Parameter speichern';
+                console.error('Error saving config:', error);
+                updateEditorStatus('Fehler beim Speichern');
+                showStatus('error', `❌ Fehler beim Speichern: ${error.message}`);
             }
         }
 
         async function createBackup() {
-            if (!currentCustomer) return;
-            
+            if (!currentCustomer) {
+                showStatus('error', '❌ Kein Kunde ausgewählt');
+                return;
+            }
+
             try {
-                const backupBtn = document.getElementById('backup-btn');
-                backupBtn.disabled = true;
-                backupBtn.innerHTML = '<span class="loading"></span> Erstelle Backup...';
+                updateEditorStatus('Erstelle Backup...');
                 
-                const response = await apiCall(`/api/backup/${encodeURIComponent(currentCustomer)}`, {
+                const response = await fetch(`/api/customers/${encodeURIComponent(currentCustomer)}/backup`, {
                     method: 'POST'
                 });
-                
-                showStatus(`Backup erstellt: ${response.backup_path}`, 'success');
-                
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                updateEditorStatus('Backup erstellt');
+                showStatus('success', `✅ Backup für ${currentCustomer} erstellt: ${result.backup_file}`);
             } catch (error) {
-                showStatus(`Fehler beim Erstellen des Backups: ${error.message}`, 'error');
-            } finally {
-                const backupBtn = document.getElementById('backup-btn');
-                backupBtn.disabled = false;
-                backupBtn.innerHTML = '📦 Backup erstellen';
+                console.error('Error creating backup:', error);
+                updateEditorStatus('Fehler beim Backup');
+                showStatus('error', `❌ Fehler beim Erstellen des Backups: ${error.message}`);
             }
         }
 
-        async function reloadParameters() {
-            if (!currentCustomer) return;
-            await loadCustomerParameters(currentCustomer);
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.customer-checkbox:checked');
+            const count = checkboxes.length;
+            
+            document.getElementById('selected-customers').textContent = count;
+            document.getElementById('selected-count').textContent = `${count} Kunden ausgewählt`;
         }
 
-        async function executeBulkUpdate() {
-            if (selectedCustomers.size === 0) {
-                showStatus('Bitte wählen Sie mindestens einen Kunden aus!', 'error');
+        async function applyBulkUpdate() {
+            const paramName = document.getElementById('custom-parameter').value.trim();
+            const paramValue = document.getElementById('bulk-value').value.trim();
+            const checkboxes = document.querySelectorAll('.customer-checkbox:checked');
+            
+            if (!paramName || !paramValue) {
+                showStatus('error', '❌ Bitte Parameter-Name und Wert eingeben');
                 return;
             }
             
-            const bulkParameter = document.getElementById('bulk-parameter').value;
-            const customParameter = document.getElementById('custom-parameter').value;
-            const bulkValue = document.getElementById('bulk-value').value;
-            
-            if (!bulkValue.trim()) {
-                showStatus('Bitte geben Sie einen Wert ein!', 'error');
+            if (checkboxes.length === 0) {
+                showStatus('error', '❌ Bitte mindestens einen Kunden auswählen');
                 return;
             }
             
-            const parameterName = bulkParameter === 'custom' ? customParameter : bulkParameter;
-            
-            if (!parameterName.trim()) {
-                showStatus('Bitte geben Sie einen Parameter-Namen ein!', 'error');
-                return;
-            }
+            const customerIds = Array.from(checkboxes).map(cb => cb.dataset.customerId);
             
             try {
-                const bulkBtn = document.getElementById('bulk-update-btn');
-                bulkBtn.disabled = true;
-                bulkBtn.innerHTML = '<span class="loading"></span> Aktualisiere...';
+                updateEditorStatus('Führe Bulk-Update durch...');
                 
-                const response = await apiCall('/api/bulk-update', {
+                const response = await fetch('/api/bulk-update', {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
-                        targets: Array.from(selectedCustomers),
-                        parameter_name: parameterName,
-                        parameter_value: bulkValue
+                        customers: customerIds,
+                        parameter: paramName,
+                        value: paramValue
                     })
                 });
                 
-                showStatus(response.message, 'success');
-                
-                // Wenn aktueller Kunde betroffen ist, Parameter neu laden
-                if (currentCustomer && selectedCustomers.has(currentCustomer)) {
-                    await loadCustomerParameters(currentCustomer);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
+                const result = await response.json();
+                updateEditorStatus('Bulk-Update abgeschlossen');
+                showStatus('success', `✅ Bulk-Update für ${customerIds.length} Kunden erfolgreich!`);
+                
+                // Reload current customer if affected
+                if (currentCustomer && customerIds.includes(currentCustomer)) {
+                    await loadCustomerInEditor(currentCustomer);
+                }
             } catch (error) {
-                showStatus(`Fehler beim Bulk-Update: ${error.message}`, 'error');
-            } finally {
-                const bulkBtn = document.getElementById('bulk-update-btn');
-                bulkBtn.disabled = false;
-                bulkBtn.innerHTML = '🔄 Bulk Update';
+                console.error('Error applying bulk update:', error);
+                updateEditorStatus('Fehler beim Bulk-Update');
+                showStatus('error', `❌ Fehler beim Bulk-Update: ${error.message}`);
             }
         }
 
-        async function generateSecret() {
-            try {
-                const response = await apiCall('/api/generate-secret', {
-                    method: 'POST'
-                });
-                
-                document.getElementById('bulk-value').value = response.secret;
-                showStatus('Neuer Secret-Key generiert!', 'success');
-                
-            } catch (error) {
-                showStatus(`Fehler beim Generieren des Secrets: ${error.message}`, 'error');
-            }
-        }
-
-        async function downloadAllConfigs() {
-            try {
-                showStatus('Lade alle Konfigurationen herunter...', 'info');
-                
-                const response = await apiCall('/api/download-all', {
-                    method: 'POST'
-                });
-                
-                showStatus(response.message, 'success');
-                
-            } catch (error) {
-                showStatus(`Fehler beim Download: ${error.message}`, 'error');
-            }
-        }
-
-        async function refreshAllConnections() {
-            try {
-                showStatus('Erneuere alle SSH-Verbindungen...', 'info');
-                await loadSystemStatus();
-                showStatus('SSH-Verbindungen erneuert!', 'success');
-            } catch (error) {
-                showStatus(`Fehler beim Erneuern der Verbindungen: ${error.message}`, 'error');
-            }
-        }
-
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('status');
-            statusDiv.textContent = message;
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('status-message');
             statusDiv.className = `status-message status-${type}`;
+            statusDiv.textContent = message;
             statusDiv.style.display = 'block';
             
             setTimeout(() => {
                 statusDiv.style.display = 'none';
             }, 5000);
         }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveFromEditor();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        formatYAML();
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        createBackup();
+                        break;
+                }
+            }
+        });
     </script>
 </body>
 </html> 

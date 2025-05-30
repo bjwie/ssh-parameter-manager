@@ -432,13 +432,13 @@ class SSHManager:
             if server_name not in self.config["servers"]:
                 self.logger.error(f"Server {server_name} not found in configuration")
                 return False
-                
+
             server_config = self.config["servers"][server_name]
-            
+
             # Create SSH client
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
+
             # Connection parameters
             connect_params = {
                 "hostname": server_config["host"],
@@ -446,7 +446,7 @@ class SSHManager:
                 "username": server_config["username"],
                 "timeout": self.config.get("ssh_settings", {}).get("timeout", 30),
             }
-            
+
             # Add authentication
             if "password" in server_config:
                 connect_params["password"] = server_config["password"]
@@ -454,18 +454,18 @@ class SSHManager:
                 key_path = os.path.expanduser(server_config["ssh_key"])
                 if os.path.exists(key_path):
                     connect_params["key_filename"] = key_path
-            
+
             # Test connection
             ssh.connect(**connect_params)
-            
+
             # Test with a simple command
             stdin, stdout, stderr = ssh.exec_command("echo 'test'")
             result = stdout.read().decode().strip()
-            
+
             ssh.close()
-            
+
             return result == "test"
-            
+
         except Exception as e:
             self.logger.error(f"Connection test failed for {server_name}: {e}")
             return False

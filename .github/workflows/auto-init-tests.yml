@@ -55,10 +55,39 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable xvfb
         
-        # Install ChromeDriver
+        # Install ChromeDriver with fallback logic
         CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1)
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}")
-        wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
+        echo "Chrome version: $CHROME_VERSION"
+        
+        # Try to get ChromeDriver for the exact Chrome version
+        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}" 2>/dev/null || echo "")
+        
+        # If that fails, try the previous major version
+        if [ -z "$CHROMEDRIVER_VERSION" ] || [ "$CHROMEDRIVER_VERSION" = "Not Found" ]; then
+          echo "ChromeDriver for Chrome $CHROME_VERSION not found, trying previous version..."
+          CHROME_VERSION=$((CHROME_VERSION - 1))
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}" 2>/dev/null || echo "")
+        fi
+        
+        # If still not found, use a stable fallback version
+        if [ -z "$CHROMEDRIVER_VERSION" ] || [ "$CHROMEDRIVER_VERSION" = "Not Found" ]; then
+          echo "Using fallback ChromeDriver version..."
+          CHROMEDRIVER_VERSION="121.0.6167.85"  # Known stable version
+        fi
+        
+        echo "Using ChromeDriver version: $CHROMEDRIVER_VERSION"
+        
+        # Download and install ChromeDriver
+        wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" || {
+          echo "Failed to download ChromeDriver, trying alternative approach..."
+          # Alternative: use system package as fallback
+          echo "Using system ChromeDriver package..."
+          sudo apt-get install -y chromium-chromedriver
+          sudo ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver
+          chromedriver --version
+          exit 0
+        }
+        
         sudo unzip /tmp/chromedriver.zip -d /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
         

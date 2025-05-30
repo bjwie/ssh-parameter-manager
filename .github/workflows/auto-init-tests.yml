@@ -80,26 +80,12 @@ jobs:
         # Download and install ChromeDriver
         wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" || {
           echo "Failed to download ChromeDriver, trying alternative approach..."
-          # Alternative: use Chrome for Testing API (newer approach)
-          CHROMEDRIVER_URL=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-stable = data['channels']['Stable']
-for download in stable['downloads']['chromedriver']:
-    if download['platform'] == 'linux64':
-        print(download['url'])
-        break
-" 2>/dev/null || echo "")
-          
-          if [ -n "$CHROMEDRIVER_URL" ]; then
-            wget -O /tmp/chromedriver.zip "$CHROMEDRIVER_URL"
-          else
-            echo "All ChromeDriver download methods failed, using system package..."
-            sudo apt-get install -y chromium-chromedriver
-            sudo ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver
-            chromedriver --version
-            exit 0
-          fi
+          # Alternative: use system package as fallback
+          echo "Using system ChromeDriver package..."
+          sudo apt-get install -y chromium-chromedriver
+          sudo ln -sf /usr/bin/chromedriver /usr/local/bin/chromedriver
+          chromedriver --version
+          exit 0
         }
         
         sudo unzip /tmp/chromedriver.zip -d /usr/local/bin/

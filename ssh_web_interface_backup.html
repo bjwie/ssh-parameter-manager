@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH Parameter Manager - Symfony Parameters.yml</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .status-info {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .status-label {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .refresh-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .customers-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .customers-panel {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .customers-panel h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .customer-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .customer-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .customer-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .customer-item.selected {
+            border-color: #27ae60;
+            background: #f0f8f0;
+        }
+
+        .customer-item.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .customer-details {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .customer-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #95a5a6;
+        }
+
+        .customer-status.connected {
+            background: #27ae60;
+        }
+
+        .customer-status.error {
+            background: #e74c3c;
+        }
+
+        .parameter-editor {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .parameter-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .bulk-actions {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .bulk-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .bulk-form > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bulk-form label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .bulk-form input, .bulk-form select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .selected-count {
+            background: #17a2b8;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .customers-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .bulk-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+
+            .status-info {
+                gap: 15px;
+            }
+
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 SSH Parameter Manager</h1>
+            <p>Verwalten Sie Symfony Parameters.yml Dateien über SSH-Verbindungen</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-info">
+                    <div class="status-item">
+                        <div class="status-value" id="total-customers">-</div>
+                        <div class="status-label">Kunden</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="connected-servers">-</div>
+                        <div class="status-label">Server verbunden</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="selected-customers">0</div>
+                        <div class="status-label">Ausgewählt</div>
+                    </div>
+                </div>
+                <button class="refresh-btn" onclick="loadSystemStatus()">🔄 Status aktualisieren</button>
+            </div>
+
+            <div id="status" class="status-message"></div>
+
+            <!-- Bulk Actions -->
+            <div class="bulk-actions">
+                <h3>⚡ Bulk-Aktionen für ausgewählte Kunden</h3>
+                <div class="bulk-form">
+                    <div>
+                        <label for="bulk-parameter">Parameter:</label>
+                        <select id="bulk-parameter">
+                            <option value="database_host">Database Host</option>
+                            <option value="database_port">Database Port</option>
+                            <option value="database_name">Database Name</option>
+                            <option value="database_user">Database User</option>
+                            <option value="database_password">Database Password</option>
+                            <option value="mailer_transport">Mailer Transport</option>
+                            <option value="mailer_host">Mailer Host</option>
+                            <option value="mailer_user">Mailer User</option>
+                            <option value="mailer_password">Mailer Password</option>
+                            <option value="secret">Secret Key</option>
+                            <option value="custom">Benutzerdefiniert...</option>
+                        </select>
+                    </div>
+                    <div id="custom-parameter-div" style="display: none;">
+                        <label for="custom-parameter">Parameter Name:</label>
+                        <input type="text" id="custom-parameter" placeholder="parameter_name">
+                    </div>
+                    <div>
+                        <label for="bulk-value">Neuer Wert:</label>
+                        <input type="text" id="bulk-value" placeholder="Neuer Wert für alle ausgewählten Kunden">
+                    </div>
+                    <div>
+                        <button class="btn btn-warning" onclick="executeBulkUpdate()" id="bulk-update-btn">
+                            🔄 Bulk Update
+                        </button>
+                        <button class="btn btn-small" onclick="generateSecret()">🎲 Secret generieren</button>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-small" onclick="selectAllCustomers()">✅ Alle auswählen</button>
+                    <button class="btn btn-small" onclick="deselectAllCustomers()">❌ Alle abwählen</button>
+                    <span id="selected-info" style="margin-left: 15px; font-weight: 600;"></span>
+                </div>
+            </div>
+
+            <!-- Main Grid -->
+            <div class="customers-grid">
+                <!-- Customer List -->
+                <div class="customers-panel">
+                    <h3>👥 Kunden (<span id="customer-count">0</span>)</h3>
+                    <div id="customer-list" class="customer-list">
+                        <!-- Kunden werden hier geladen -->
+                    </div>
+                </div>
+
+                <!-- Parameter Editor -->
+                <div class="parameter-editor">
+                    <h3 id="editor-title">📝 Parameter Editor</h3>
+                    <p id="editor-subtitle">Wählen Sie einen Kunden aus, um Parameter zu bearbeiten</p>
+                    
+                    <div id="parameter-form" class="parameter-form" style="display: none;">
+                        <!-- Parameter-Formular wird hier geladen -->
+                    </div>
+                    
+                    <div id="editor-actions" style="margin-top: 20px; display: none;">
+                        <button class="btn btn-success" onclick="saveParameters()" id="save-btn">
+                            💾 Parameter speichern
+                        </button>
+                        <button class="btn btn-warning" onclick="createBackup()" id="backup-btn">
+                            📦 Backup erstellen
+                        </button>
+                        <button class="btn" onclick="reloadParameters()" id="reload-btn">
+                            🔄 Neu laden
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #ecf0f1;">
+                <button class="btn btn-warning" onclick="downloadAllConfigs()">💾 Alle Konfigurationen herunterladen</button>
+                <button class="btn btn-danger" onclick="refreshAllConnections()">🔄 Alle Verbindungen erneuern</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Globale Variablen
+        let customers = {};
+        let selectedCustomers = new Set();
+        let currentCustomer = null;
+
+        // API Base URL
+        const API_BASE = '';
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadSystemStatus();
+            loadCustomers();
+        });
+
+        function setupEventListeners() {
+            // Bulk Parameter Change
+            document.getElementById('bulk-parameter').addEventListener('change', function() {
+                const customDiv = document.getElementById('custom-parameter-div');
+                customDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+
+        // API Funktionen
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        async function loadSystemStatus() {
+            try {
+                const status = await apiCall('/api/status');
+                
+                document.getElementById('total-customers').textContent = status.total_customers;
+                
+                const connectedCount = Object.values(status.servers).filter(s => s.connected).length;
+                document.getElementById('connected-servers').textContent = `${connectedCount}/${Object.keys(status.servers).length}`;
+                
+                // Server-Status in Kunden-Liste aktualisieren
+                updateCustomerConnectionStatus(status.servers);
+                
+            } catch (error) {
+                showStatus(`Fehler beim Laden des Status: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadCustomers() {
+            try {
+                showStatus('Lade Kunden...', 'info');
+                
+                const response = await apiCall('/api/customers');
+                customers = response.customers;
+                
+                displayCustomers();
+                document.getElementById('customer-count').textContent = Object.keys(customers).length;
+                
+                showStatus(`${Object.keys(customers).length} Kunden geladen`, 'success');
+                
+            } catch (error) {
+                showStatus(`Fehler beim Laden der Kunden: ${error.message}`, 'error');
+            }
+        }
+
+        function displayCustomers() {
+            const customerList = document.getElementById('customer-list');
+            customerList.innerHTML = '';
+            
+            for (const [customerId, customerInfo] of Object.entries(customers)) {
+                const customerItem = document.createElement('div');
+                customerItem.className = 'customer-item';
+                customerItem.setAttribute('data-customer-id', customerId);
+                customerItem.onclick = () => toggleCustomerSelection(customerId);
+                
+                customerItem.innerHTML = `
+                    <div class="customer-status" id="status-${customerId}"></div>
+                    <div class="customer-name">👤 ${customerId}</div>
+                    <div class="customer-details">
+                        <div>🖥️ ${customerInfo.host}</div>
+                        <div>📁 ${customerInfo.path}</div>
+                        <div>📝 ${customerInfo.description}</div>
+                    </div>
+                `;
+                
+                customerList.appendChild(customerItem);
+            }
+        }
+
+        function updateCustomerConnectionStatus(serverStatus) {
+            for (const [customerId, customerInfo] of Object.entries(customers)) {
+                const statusElement = document.getElementById(`status-${customerId}`);
+                if (statusElement) {
+                    const serverName = customerInfo.server;
+                    const serverInfo = serverStatus[serverName];
+                    
+                    if (serverInfo && serverInfo.connected) {
+                        statusElement.className = 'customer-status connected';
+                        statusElement.title = 'Verbunden';
+                    } else {
+                        statusElement.className = 'customer-status error';
+                        statusElement.title = serverInfo ? serverInfo.error : 'Nicht verbunden';
+                    }
+                }
+            }
+        }
+
+        function toggleCustomerSelection(customerId) {
+            const customerItem = document.querySelector(`[data-customer-id="${customerId}"]`);
+            
+            if (!customerItem) {
+                console.error(`Customer item not found for ID: ${customerId}`);
+                return;
+            }
+            
+            if (selectedCustomers.has(customerId)) {
+                selectedCustomers.delete(customerId);
+                customerItem.classList.remove('selected');
+            } else {
+                selectedCustomers.add(customerId);
+                customerItem.classList.add('selected');
+            }
+            
+            updateSelectedCustomersDisplay();
+            
+            // Wenn nur ein Kunde ausgewählt ist, lade seine Parameter
+            if (selectedCustomers.size === 1) {
+                loadCustomerParameters(customerId);
+            } else {
+                clearParameterEditor();
+            }
+        }
+
+        function selectAllCustomers() {
+            selectedCustomers.clear();
+            for (const customerId of Object.keys(customers)) {
+                selectedCustomers.add(customerId);
+            }
+            
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.classList.add('selected');
+            });
+            
+            updateSelectedCustomersDisplay();
+            clearParameterEditor();
+        }
+
+        function deselectAllCustomers() {
+            selectedCustomers.clear();
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            updateSelectedCustomersDisplay();
+            clearParameterEditor();
+        }
+
+        function updateSelectedCustomersDisplay() {
+            document.getElementById('selected-customers').textContent = selectedCustomers.size;
+            
+            const selectedInfo = document.getElementById('selected-info');
+            if (selectedCustomers.size > 0) {
+                selectedInfo.innerHTML = `<span class="selected-count">${selectedCustomers.size} ausgewählt</span>`;
+            } else {
+                selectedInfo.textContent = 'Keine Kunden ausgewählt';
+            }
+        }
+
+        async function loadCustomerParameters(customerId) {
+            try {
+                currentCustomer = customerId;
+                
+                // UI aktualisieren
+                document.getElementById('editor-title').textContent = `📝 Parameter Editor - ${customerId}`;
+                document.getElementById('editor-subtitle').textContent = 'Lade Parameter...';
+                
+                // Parameter laden
+                const response = await apiCall(`/api/customer/${encodeURIComponent(customerId)}/parameters`);
+                
+                displayParameterForm(response.parameters, response.file_path);
+                
+            } catch (error) {
+                showStatus(`Fehler beim Laden der Parameter: ${error.message}`, 'error');
+                clearParameterEditor();
+            }
+        }
+
+        function displayParameterForm(parameters, filePath) {
+            const form = document.getElementById('parameter-form');
+            const actions = document.getElementById('editor-actions');
+            
+            document.getElementById('editor-subtitle').textContent = `Datei: ${filePath}`;
+            
+            // Standard-Parameter
+            const standardParams = [
+                { key: 'database_host', label: 'Database Host', type: 'text' },
+                { key: 'database_port', label: 'Database Port', type: 'number' },
+                { key: 'database_name', label: 'Database Name', type: 'text' },
+                { key: 'database_user', label: 'Database User', type: 'text' },
+                { key: 'database_password', label: 'Database Password', type: 'password' },
+                { key: 'mailer_transport', label: 'Mailer Transport', type: 'select', options: ['smtp', 'sendmail', 'mail', 'gmail'] },
+                { key: 'mailer_host', label: 'Mailer Host', type: 'text' },
+                { key: 'mailer_user', label: 'Mailer User', type: 'text' },
+                { key: 'mailer_password', label: 'Mailer Password', type: 'password' },
+                { key: 'secret', label: 'Secret Key', type: 'text' }
+            ];
+            
+            let formHTML = '';
+            
+            // Standard-Parameter hinzufügen
+            for (const param of standardParams) {
+                const value = parameters[param.key] || '';
+                
+                if (param.type === 'select') {
+                    const options = param.options.map(opt => 
+                        `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`
+                    ).join('');
+                    
+                    formHTML += `
+                        <div class="form-group">
+                            <label>${param.label}:</label>
+                            <select name="${param.key}">${options}</select>
+                        </div>
+                    `;
+                } else {
+                    formHTML += `
+                        <div class="form-group">
+                            <label>${param.label}:</label>
+                            <input type="${param.type}" name="${param.key}" value="${value}" placeholder="${param.label}">
+                        </div>
+                    `;
+                }
+            }
+            
+            // Zusätzliche Parameter
+            const additionalParams = Object.entries(parameters).filter(([key]) => 
+                !standardParams.some(p => p.key === key)
+            );
+            
+            if (additionalParams.length > 0) {
+                formHTML += '<h4 style="grid-column: 1 / -1; margin: 20px 0 10px 0; color: #2c3e50;">➕ Zusätzliche Parameter</h4>';
+                
+                for (const [key, value] of additionalParams) {
+                    formHTML += `
+                        <div class="form-group">
+                            <label>${key}:</label>
+                            <input type="text" name="${key}" value="${value}" placeholder="${key}">
+                        </div>
+                    `;
+                }
+            }
+            
+            form.innerHTML = formHTML;
+            form.style.display = 'grid';
+            actions.style.display = 'block';
+        }
+
+        function clearParameterEditor() {
+            currentCustomer = null;
+            document.getElementById('editor-title').textContent = '📝 Parameter Editor';
+            document.getElementById('editor-subtitle').textContent = 'Wählen Sie einen Kunden aus, um Parameter zu bearbeiten';
+            document.getElementById('parameter-form').style.display = 'none';
+            document.getElementById('editor-actions').style.display = 'none';
+        }
+
+        async function saveParameters() {
+            if (!currentCustomer) return;
+            
+            try {
+                const saveBtn = document.getElementById('save-btn');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="loading"></span> Speichere...';
+                
+                // Parameter aus Formular sammeln
+                const form = document.getElementById('parameter-form');
+                const inputs = form.querySelectorAll('input, select');
+                const parameters = {};
+                
+                inputs.forEach(input => {
+                    if (input.value.trim()) {
+                        parameters[input.name] = input.value.trim();
+                    }
+                });
+                
+                // API-Aufruf
+                await apiCall(`/api/customer/${encodeURIComponent(currentCustomer)}/parameters`, {
+                    method: 'POST',
+                    body: JSON.stringify({ parameters })
+                });
+                
+                showStatus(`Parameter für ${currentCustomer} erfolgreich gespeichert!`, 'success');
+                
+            } catch (error) {
+                showStatus(`Fehler beim Speichern: ${error.message}`, 'error');
+            } finally {
+                const saveBtn = document.getElementById('save-btn');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '💾 Parameter speichern';
+            }
+        }
+
+        async function createBackup() {
+            if (!currentCustomer) return;
+            
+            try {
+                const backupBtn = document.getElementById('backup-btn');
+                backupBtn.disabled = true;
+                backupBtn.innerHTML = '<span class="loading"></span> Erstelle Backup...';
+                
+                const response = await apiCall(`/api/backup/${encodeURIComponent(currentCustomer)}`, {
+                    method: 'POST'
+                });
+                
+                showStatus(`Backup erstellt: ${response.backup_path}`, 'success');
+                
+            } catch (error) {
+                showStatus(`Fehler beim Erstellen des Backups: ${error.message}`, 'error');
+            } finally {
+                const backupBtn = document.getElementById('backup-btn');
+                backupBtn.disabled = false;
+                backupBtn.innerHTML = '📦 Backup erstellen';
+            }
+        }
+
+        async function reloadParameters() {
+            if (!currentCustomer) return;
+            await loadCustomerParameters(currentCustomer);
+        }
+
+        async function executeBulkUpdate() {
+            if (selectedCustomers.size === 0) {
+                showStatus('Bitte wählen Sie mindestens einen Kunden aus!', 'error');
+                return;
+            }
+            
+            const bulkParameter = document.getElementById('bulk-parameter').value;
+            const customParameter = document.getElementById('custom-parameter').value;
+            const bulkValue = document.getElementById('bulk-value').value;
+            
+            if (!bulkValue.trim()) {
+                showStatus('Bitte geben Sie einen Wert ein!', 'error');
+                return;
+            }
+            
+            const parameterName = bulkParameter === 'custom' ? customParameter : bulkParameter;
+            
+            if (!parameterName.trim()) {
+                showStatus('Bitte geben Sie einen Parameter-Namen ein!', 'error');
+                return;
+            }
+            
+            try {
+                const bulkBtn = document.getElementById('bulk-update-btn');
+                bulkBtn.disabled = true;
+                bulkBtn.innerHTML = '<span class="loading"></span> Aktualisiere...';
+                
+                const response = await apiCall('/api/bulk-update', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        targets: Array.from(selectedCustomers),
+                        parameter_name: parameterName,
+                        parameter_value: bulkValue
+                    })
+                });
+                
+                showStatus(response.message, 'success');
+                
+                // Wenn aktueller Kunde betroffen ist, Parameter neu laden
+                if (currentCustomer && selectedCustomers.has(currentCustomer)) {
+                    await loadCustomerParameters(currentCustomer);
+                }
+                
+            } catch (error) {
+                showStatus(`Fehler beim Bulk-Update: ${error.message}`, 'error');
+            } finally {
+                const bulkBtn = document.getElementById('bulk-update-btn');
+                bulkBtn.disabled = false;
+                bulkBtn.innerHTML = '🔄 Bulk Update';
+            }
+        }
+
+        async function generateSecret() {
+            try {
+                const response = await apiCall('/api/generate-secret', {
+                    method: 'POST'
+                });
+                
+                document.getElementById('bulk-value').value = response.secret;
+                showStatus('Neuer Secret-Key generiert!', 'success');
+                
+            } catch (error) {
+                showStatus(`Fehler beim Generieren des Secrets: ${error.message}`, 'error');
+            }
+        }
+
+        async function downloadAllConfigs() {
+            try {
+                showStatus('Lade alle Konfigurationen herunter...', 'info');
+                
+                const response = await apiCall('/api/download-all', {
+                    method: 'POST'
+                });
+                
+                showStatus(response.message, 'success');
+                
+            } catch (error) {
+                showStatus(`Fehler beim Download: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshAllConnections() {
+            try {
+                showStatus('Erneuere alle SSH-Verbindungen...', 'info');
+                await loadSystemStatus();
+                showStatus('SSH-Verbindungen erneuert!', 'success');
+            } catch (error) {
+                showStatus(`Fehler beim Erneuern der Verbindungen: ${error.message}`, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 

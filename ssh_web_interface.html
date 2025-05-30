@@ -936,8 +936,11 @@ parameters:
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
+                // Count connected servers
+                const connectedServers = Object.values(data.servers || {}).filter(s => s.connected).length;
+                
                 document.getElementById('total-customers').textContent = data.total_customers || 0;
-                document.getElementById('connected-servers').textContent = data.connected_servers || 0;
+                document.getElementById('connected-servers').textContent = connectedServers;
                 
                 await loadCustomers();
                 updateEditorStatus('System-Status geladen');
@@ -951,7 +954,8 @@ parameters:
         async function loadCustomers() {
             try {
                 const response = await fetch('/api/customers');
-                customers = await response.json();
+                const data = await response.json();
+                customers = data.customers || [];
                 
                 updateCustomerList();
                 updateCustomerSelector();
@@ -1013,14 +1017,16 @@ parameters:
             try {
                 updateEditorStatus(`Lade Konfiguration für ${customerId}...`);
                 
-                const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/parameters`);
+                const response = await fetch(`/api/customer/${encodeURIComponent(customerId)}/parameters`);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const content = await response.text();
-                originalContent = content;
-                editor.setValue(content);
+                const data = await response.json();
+                const yamlContent = convertParametersToYAML(data.parameters);
+                
+                originalContent = yamlContent;
+                editor.setValue(yamlContent);
                 currentCustomer = customerId;
                 
                 document.getElementById('current-file').textContent = `${customerId}/parameters.yml`;
@@ -1045,6 +1051,17 @@ parameters:
             }
         }
 
+        function convertParametersToYAML(parameters) {
+            const yamlData = {
+                parameters: parameters
+            };
+            return jsyaml.dump(yamlData, {
+                indent: 4,
+                lineWidth: 120,
+                noRefs: true
+            });
+        }
+
         async function saveFromEditor() {
             if (!currentCustomer) {
                 showStatus('error', '❌ Kein Kunde ausgewählt');
@@ -1060,12 +1077,15 @@ parameters:
                 updateEditorStatus('Speichere Änderungen...');
                 
                 const content = editor.getValue();
-                const response = await fetch(`/api/customers/${encodeURIComponent(currentCustomer)}/parameters`, {
-                    method: 'PUT',
+                const parsedYaml = jsyaml.load(content);
+                const parameters = parsedYaml.parameters || {};
+                
+                const response = await fetch(`/api/customer/${encodeURIComponent(currentCustomer)}/parameters`, {
+                    method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain'
+                        'Content-Type': 'application/json'
                     },
-                    body: content
+                    body: JSON.stringify({ parameters: parameters })
                 });
 
                 if (!response.ok) {
@@ -1093,7 +1113,7 @@ parameters:
             try {
                 updateEditorStatus('Erstelle Backup...');
                 
-                const response = await fetch(`/api/customers/${encodeURIComponent(currentCustomer)}/backup`, {
+                const response = await fetch(`/api/backup/${encodeURIComponent(currentCustomer)}`, {
                     method: 'POST'
                 });
 
@@ -1103,7 +1123,7 @@ parameters:
 
                 const result = await response.json();
                 updateEditorStatus('Backup erstellt');
-                showStatus('success', `✅ Backup für ${currentCustomer} erstellt: ${result.backup_file}`);
+                showStatus('success', `✅ Backup für ${currentCustomer} erstellt: ${result.backup_path}`);
             } catch (error) {
                 console.error('Error creating backup:', error);
                 updateEditorStatus('Fehler beim Backup');
@@ -1145,9 +1165,9 @@ parameters:
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        customers: customerIds,
-                        parameter: paramName,
-                        value: paramValue
+                        targets: customerIds,
+                        parameter_name: paramName,
+                        parameter_value: paramValue
                     })
                 });
                 
@@ -1157,7 +1177,7 @@ parameters:
                 
                 const result = await response.json();
                 updateEditorStatus('Bulk-Update abgeschlossen');
-                showStatus('success', `✅ Bulk-Update für ${customerIds.length} Kunden erfolgreich!`);
+                showStatus('success', `✅ ${result.message}`);
                 
                 // Reload current customer if affected
                 if (currentCustomer && customerIds.includes(currentCustomer)) {

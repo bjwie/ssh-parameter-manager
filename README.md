@@ -7,6 +7,10 @@
 [![CI/CD](https://github.com/bjwie/ssh-parameter-manager/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/bjwie/ssh-parameter-manager/actions)
 [![Auto-Init Tests](https://github.com/bjwie/ssh-parameter-manager/workflows/Auto-Initialization%20Tests/badge.svg)](https://github.com/bjwie/ssh-parameter-manager/actions)
 
+<div align="center">
+  <img src="ssh_manager.png" alt="SSH Parameter Manager Logo" width="400">
+</div>
+
 A professional web-based tool for managing Symfony `parameters.yml` files across multiple servers via SSH connections. Perfect for DevOps teams managing multiple customer environments with **automatic initialization** and **real-time status updates**.
 
 ## 📸 Screenshot

@@ -71,6 +71,20 @@ def index() -> str:
     return send_from_directory(".", "ssh_web_interface.html")
 
 
+@app.route("/assets/<path:filename>")
+def serve_assets(filename: str) -> str:
+    """
+    Serve static assets like favicon, images, etc.
+
+    Args:
+        filename (str): Name of the asset file to serve
+
+    Returns:
+        str: File content from assets directory
+    """
+    return send_from_directory("assets", filename)
+
+
 @app.route("/api/status", methods=["GET"])
 def get_system_status() -> Tuple[Dict[str, Any], int]:
     """

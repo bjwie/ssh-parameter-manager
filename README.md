@@ -8,20 +8,20 @@
 [![Auto-Init Tests](https://github.com/bjwie/ssh-parameter-manager/workflows/Auto-Initialization%20Tests/badge.svg)](https://github.com/bjwie/ssh-parameter-manager/actions)
 
 <div align="center">
-  <img src="ssh_manager.png" alt="SSH Parameter Manager Logo" width="400">
+  <img src="assets/ssh_manager.png" alt="SSH Parameter Manager Logo" width="400">
 </div>
 
 A professional web-based tool for managing Symfony `parameters.yml` files across multiple servers via SSH connections. Perfect for DevOps teams managing multiple customer environments with **automatic initialization** and **real-time status updates**.
 
 ## 📸 Screenshot
 
-![SSH Parameter Manager Interface](screenshot.png)
+![SSH Parameter Manager Interface](assets/screenshot.png)
 
 *Modern web interface for managing Symfony parameters across multiple servers with real-time status monitoring, automatic loading, and bulk operations.*
 
 ### 🆕 New Auto-Initialization Features
 
-![Auto-Initialization and Dual View Modes](screenshot2.png)
+![Auto-Initialization and Dual View Modes](assets/screenshot2.png)
 
 *Latest interface showcasing **automatic status loading** (2 customers, 1 connected server), **dual view modes** (VSCode Edition vs Classical View), and **Monaco Editor integration** with YAML syntax highlighting - all loaded automatically without manual refresh!*
 
